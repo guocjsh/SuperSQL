@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "ignoreDeprecations": "5.0",//加入这句代码即可
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    /* Bundler mode */
+    "moduleResolution": "node",//从bundler改为node，可隐藏引用vue的提示
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false, //改为false 可隐藏没有使用的引用报错
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "suppressImplicitAnyIndexErrors":true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/common/common.ts"],
+  "exclude": ["node_modules"],
+  "suppressImplicitAnyIndexErrors":true,
+}

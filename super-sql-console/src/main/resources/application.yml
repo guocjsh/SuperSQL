@@ -1,0 +1,55 @@
+##服务端口
+server:
+  port: 9800
+spring:
+  application:
+    ###应用名
+    name: super-sql-demo
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/super-sql?characterEncoding=utf8&useSSL=false
+    username: root
+    password: 123456
+
+  ai:
+    azure:
+      openai:
+        api-key: #Azure OpenAi 的key
+        chat:
+          options:
+            deployment-name: #Azure OpenAI 的模型部署名称
+        endpoint: #Azure OpenAI的请求地址 例如：https://your-domain.openai.azure.com/
+        embedding:
+          options:
+            deployment-name: #Azure OpenAI 的embedding模型部署名称
+
+#  当使用 Ollama时，请配置以下参数
+#    ollama:
+#      base-url: http://localhost:11434
+#      chat:
+#        options:
+#          model: deepseek-r1:32b
+#          temperature: 0.7
+#      embedding:
+#        options:
+#          model: mxbai-embed-large
+#      init:
+#        pull-model-strategy: never
+#        embedding:
+#          additional-models:
+#            - mxbai-embed-large
+
+    vectorstore:
+      chroma:
+        client:
+          host: http://localhost
+          port: 8000
+        collection-name: super-sql
+        initialize-schema: true
+
+mvc:
+  async:
+    request-timeout: 2000
+
+super-sql:
+  init-train: true

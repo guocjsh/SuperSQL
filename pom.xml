@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.aispace.supersql</groupId>
+    <artifactId>super-sql</artifactId>
+    <version>${revision}</version>
+    <packaging>pom</packaging>
+    <name>super-sql</name>
+    <description>中国人自己的Text To Sql Java框架</description>
+    <url>https://gitee.com/isan-team/super-sql</url>
+    <licenses>
+        <license>
+            <name>Apache 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>guocjsh</id>
+            <name>ChengJie Guo</name>
+            <email>chengjie.x.guo@gsk.com</email>
+            <organization>Glaxosmithkline (China) Investment Company Limited</organization>
+            <organizationUrl>https://gsk.com</organizationUrl>
+        </developer>
+    </developers>
+    <modules>
+        <module>super-sql-core</module>
+        <module>super-sql-console</module>
+        <module>super-sql-mybatis-plus</module>
+        <module>super-sql-spring-boot-starter</module>
+    </modules>
+    <scm>
+        <url>https://gitee.com/isan-team/super-sql</url>
+        <connection>git://gitee.com/isan-team/super-sql.git</connection>
+        <developerConnection>git@gitee.com:isan-team/super-sql.git</developerConnection>
+    </scm>
+    <properties>
+        <java.version>21</java.version>
+        <revision>1.0.0-M1-SNAPSHOT</revision>
+        <spring-boot.version>3.3.3</spring-boot.version>
+        <hutool.version>5.8.35</hutool.version>
+        <fastjson.version>2.0.31</fastjson.version>
+        <lombok.version>1.18.32</lombok.version>
+        <mybatis.plus-version>3.5.8</mybatis.plus-version>
+        <mysql.version>8.0.32</mysql.version>
+        <!-- Spring AI -->
+        <spring-ai.version>1.0.0-M5</spring-ai.version>
+    </properties>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-core</artifactId>
+                <version>${mybatis.plus-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>${mybatis.plus-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${fastjson.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.3</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>aliyun-repos</id>
+            <url>https://maven.aliyun.com/repository/public/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+    </repositories>
+
+</project>

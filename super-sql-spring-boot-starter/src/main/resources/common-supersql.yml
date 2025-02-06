@@ -1,0 +1,12 @@
+spring:
+  ai:
+    azure:
+      openai:
+        chat:
+          options:
+            temperature: 0.7
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+super-sql:
+  init-train: false
