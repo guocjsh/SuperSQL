@@ -73,10 +73,10 @@ public abstract class AbstractSqlEngine implements SqlEngine {
                     question,
                     expression.eq("script_type", type.name()).build(),
                     10);
-//            return documents.stream()
-//                    .filter(doc -> doc.getScore() >= 0.2)
-//                    .collect(Collectors.toList());
-            return documents;
+            return documents.stream()
+                    .filter(doc -> doc.getScore() >= 0.4)
+                    .collect(Collectors.toList());
+//            return documents;
         } catch (Exception e) {
             // 记录日志并返回空列表，具体处理方式根据业务需求调整
             System.err.println("Error searching documents by type " + type + ": " + e.getMessage());
@@ -192,7 +192,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
         if (StrUtil.isBlank(llmResponse)) {
             throw new IllegalArgumentException("LLM response is empty or invalid.");
         }
-        llmResponse=TextProcessor.removeTags(llmResponse);
+        //llmResponse=TextProcessor.removeTags(llmResponse);
         Pattern pattern = Pattern.compile("^\\d+\\.\\s*", Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(llmResponse);
         String numbersRemoved = matcher.replaceAll("");
@@ -236,7 +236,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
         List<Message> messages = new ArrayList<>(List.of(systemMessage,userMessage));
         Prompt prompt = new Prompt(messages);
         String content = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
-        return TextProcessor.removeTags(content);
+        return content;//TextProcessor.removeTags(content);
     }
 
 
@@ -310,7 +310,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             List<Message> messages = new ArrayList<>(List.of(systemMessage, userMessage));
             Prompt prompt = new Prompt(messages);
             String content = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
-            return TextProcessor.removeTags(content);
+            return content;//TextProcessor.removeTags(content);
         } catch (Exception e) {
             // Log the exception details
             throw new RuntimeException("Failed to generate question from SQL: " + e.getMessage(), e);
