@@ -5,6 +5,7 @@ import com.aispace.supersql.vector.SpringVectorStore;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.core.io.ResourceLoader;
 
 import java.util.List;
 import java.util.Map;
@@ -21,11 +22,14 @@ public class SpringSqlEngine extends AbstractSqlEngine {
 
     private final SpringRagEngine springRagEngine;
 
+    private final ResourceLoader resourceLoader;
+
     @Override
     protected void builder() {
         super.chatModel= chatModel;
         super.vectorStore = store;
         super.ragEngine =springRagEngine ;
+        super.resourceLoader = resourceLoader;
     }
 
     public SpringSqlEngine setChatModel(ChatModel chatModel){
@@ -46,4 +50,6 @@ public class SpringSqlEngine extends AbstractSqlEngine {
             throw new RuntimeException("Failed to execute SQL", e);
         }
     }
+
+
 }

@@ -1,0 +1,15 @@
+{
+  "xAxis": {
+    "type": "category",
+    "data": ["图例的数据数组"]
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "series": [
+    {
+      "data": ["Define data dimensions under series"],
+      "type": "bar"
+    }
+  ]
+}

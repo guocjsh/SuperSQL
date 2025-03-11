@@ -10,8 +10,10 @@ import com.aispace.supersql.util.SqlExtractorUtils;
 import com.aispace.supersql.util.TextProcessor;
 import com.aispace.supersql.vector.BaseVectorStore;
 import com.aispace.supersql.prompt.SqlAssistantPrompt;
+import com.alibaba.fastjson.JSONObject;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -22,8 +24,14 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import reactor.core.publisher.Flux;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +48,8 @@ public abstract class AbstractSqlEngine implements SqlEngine {
     protected RagEngine ragEngine;
 
     protected ChatModel chatModel;
+
+    protected ResourceLoader resourceLoader;
 
     @PostConstruct
     public void initialize() {
@@ -315,5 +325,64 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             // Log the exception details
             throw new RuntimeException("Failed to generate question from SQL: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public JSONObject generateEcharsJson(Object data) {
+        try {
+            // 读取 JSON 文件内容到字符串
+            String format = null;
+            Resource resource = resourceLoader.getResource("classpath:Echarts.json");
+            try {
+                format = new String(toByteArray(resource.getInputStream()), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            PromptTemplate promptTemplate = new PromptTemplate("""
+                    ### Goal
+                    You need to generate the required JSON configuration items for the ECharts line chart data, the chart data needs to be meaningful, and the data can be analyzed by the data of different metrics. It has reference significance.
+                    ### Data that needs to be generated
+                    {data}
+                    ### For Example
+                    It is necessary to follow the json format. If some attributes have no value, the attribute field does not need to be displayed. The availability of json needs to be ensured.
+                    {format}
+                    """);
+
+            Prompt prompt = promptTemplate.create(Map.of("data", data, "format", format));
+            String content = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
+            return JSONObject.parseObject(extractJsonPattern(content));
+        }catch (Exception e){
+            log.error("Failed to generate EchartsJson: {}", e.getMessage());
+        }
+        return null;
+    }
+
+
+    private static String extractJsonPattern(String llmResponse) {
+        Pattern pattern = Pattern.compile("(?s)```json\\s*\\n(.*?)\\s*```", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(llmResponse);
+        if (matcher.find()) {
+            // 检查是否存在捕获组
+            if (matcher.groupCount() > 0) {
+                String json = matcher.group(1);
+                log.info("{}: {}", "Extracted JSON", json);
+                return json;
+            } else {
+                // 如果没有捕获组，返回整个匹配的内容
+                String json = matcher.group();
+                log.info("{}: {}", "Extracted JSON", json);
+                return json;
+            }
+        }
+        return null;
+    }
+
+
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try(InputStream in = input){
+            IOUtils.copy(in, output);
+        }
+        return output.toByteArray();
     }
 }

@@ -2,6 +2,7 @@ package com.aispace.supersql.engine;
 
 import com.aispace.supersql.builder.FollowupQuestionsBuilder;
 import com.aispace.supersql.builder.TrainBuilder;
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.ai.chat.model.ChatResponse;
 import reactor.core.publisher.Flux;
 
@@ -52,6 +53,16 @@ public interface SqlEngine {
      */
     List<String> followupQuestions(FollowupQuestionsBuilder questionsBuilder);
 
+
+    /**
+     * 生成Echarts的JSON数据。
+     * 该方法接收一个对象，并使用Echarts的JSON格式生成一个JSON对象。
+     * 主要用于将数据转换为Echarts的JSON格式，以便于可视化展示。
+     *
+     * @param data 需要转换为Echarts的JSON格式的对象。
+     * @return 返回一个Echarts的JSON格式的JSON对象。
+     */
+    JSONObject generateEcharsJson(Object data);
 
     /**
      * 生成重写的问题。

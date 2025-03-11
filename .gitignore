@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+doc/super-sql-ui/.idea

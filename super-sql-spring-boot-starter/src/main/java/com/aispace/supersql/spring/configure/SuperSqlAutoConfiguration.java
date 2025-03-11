@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.io.ResourceLoader;
 
 import java.util.List;
 import java.util.Map;
@@ -50,9 +51,10 @@ public class SuperSqlAutoConfiguration {
             @Autowired SuperSQLProperties superSQLProperties,
             IExecuteSqlService executeService,
             SpringVectorStore springVectorStore,
-            SpringRagEngine springRagEngine
+            SpringRagEngine springRagEngine,
+            ResourceLoader resourceLoader
             ){
-        SpringSqlEngine engine = new SpringSqlEngine(executeService, null, springVectorStore, springRagEngine);
+        SpringSqlEngine engine = new SpringSqlEngine(executeService, null, springVectorStore, springRagEngine, resourceLoader);
         if (superSQLProperties != null && superSQLProperties.getInitTrain()) {
             log.info("Initialization training for SuperSQL has been enabled.");
             String sql = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS";
