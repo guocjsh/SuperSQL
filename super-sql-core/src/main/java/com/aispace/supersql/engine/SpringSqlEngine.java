@@ -1,5 +1,7 @@
 package com.aispace.supersql.engine;
 
+import com.aispace.supersql.builder.RagOptions;
+import com.aispace.supersql.rerank.RerankModel;
 import com.aispace.supersql.service.IExecuteSqlService;
 import com.aispace.supersql.vector.SpringVectorStore;
 import lombok.AllArgsConstructor;
@@ -24,16 +26,24 @@ public class SpringSqlEngine extends AbstractSqlEngine {
 
     private final ResourceLoader resourceLoader;
 
+    private final RerankModel rerankModel;
+
     @Override
     protected void builder() {
         super.chatModel= chatModel;
         super.vectorStore = store;
         super.ragEngine =springRagEngine ;
         super.resourceLoader = resourceLoader;
+        super.rerankModel=rerankModel;
     }
 
     public SpringSqlEngine setChatModel(ChatModel chatModel){
         super.chatModel= chatModel;
+        return this;
+    }
+
+    public SpringSqlEngine setOptions(RagOptions options){
+        super.options=options;
         return this;
     }
 

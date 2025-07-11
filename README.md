@@ -1,13 +1,13 @@
 <p align="center">
 	<img alt="logo" src="https://tiger-bucket.oss-cn-shanghai.aliyuncs.com/super-sql/logo.png" width="200" height="60">
 </p>
-<h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Super Sql 1.0.0-M1</h1>
+<h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">SuperSQL 1.0.0-M1</h1>
 <h4 align="center">中国人自己的生成式SQL Java框架！轻量，易用，易扩展!</h4>
 
 ---
 
-### Super-Sql 介绍
-Super-Sql 是一个基于国内外先进生成式大模型的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
+### SuperSQL 介绍
+SuperSQL 是一个基于国内外先进生成式大模型实现Nl2sql的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
 
 主要特性包括：
 
@@ -17,31 +17,31 @@ Super-Sql 是一个基于国内外先进生成式大模型的Java框架，专注
 - **多数据库支持**：兼容多种主流数据库系统，满足不同应用场景的需求。
 - **性能优化**：经过精心设计与调优，在保证高效执行的同时保持良好的可读性。
 
-Super-Sql 适用于希望在Java应用程序中快速、安全地进行复杂数据库操作，并且希望通过自然语言处理技术为传统企业应用快速的实现AI赋能。
+SuperSQL 适用于希望在Java应用程序中快速、安全地进行复杂数据库操作，并且希望通过自然语言处理技术为传统企业应用快速的实现AI赋能。
 
 
 
-### Super-Sql 工作原理
+### SuperSQL 工作原理
 
-Super-Sql 的工作原理基于 RAG 技术，通过检索增强生成技术对数据库表结构进行深度学习训练，从而实现从自然语言文本到SQL查询的智能转换。
+SuperSQL 的工作原理基于 RAG 技术，通过检索增强生成技术对数据库表结构进行深度学习训练，从而实现从自然语言文本到SQL查询的智能转换。
 
 ![super-sql-ai](https://tiger-bucket.oss-cn-shanghai.aliyuncs.com/super-sql/how-to-work.png)
 
 
-### Super-Sql 快速开始
+### SuperSQL 快速开始
 
-#### 导入Super-Sql的maven依赖
+#### 导入SuperSQL的maven依赖
 
 ```xml
 <dependency>
     <groupId>com.aispace.supersql</groupId>
     <artifactId>super-sql-spring-boot-starter</artifactId>
-    <version>1.0.0-M1-SNAPSHOT</version>
+    <version>1.0.0-M1</version>
 </dependency>
 
 ```
 
-### 配置Super-Sql的配置文件
+### 配置SuperSQL的配置文件
 
 配置init-train配置项，默认为false，表示不进行训练，如果为true，则自动根据数据库连接配置进行全表训练。
 ```yaml
@@ -57,7 +57,7 @@ super-sql:
  <!--spring ai azure openai 模型-->
 <dependency>
     <groupId>org.springframework.ai</groupId>
-    <artifactId>spring-ai-azure-openai-spring-boot-starter</artifactId>
+    <artifactId>spring-ai-starter-model-azure-openai</artifactId>
 </dependency>
 ```
 azure的配置文件配置如下：
@@ -86,7 +86,13 @@ private final SpringVectorStore store;
 
 @GetMapping("getSuperSql")
 public Object getSuperSql(@RequestParam String question) {
-    String sql = sqlEngine.setChatModel(azureChatModel).generateSql(question);
+    String sql = sqlEngine.setChatModel(azureChatModel)
+            .setOptions(RagOptions.builder() //设置Rag参数
+                    .topN(5) //返回的topN条数据
+                    .rerank(false) //是否进行rerank重排序
+                    .limitScore(0.4) //返回的分数阈值
+                    .build())
+            .generateSql(question);
     Object object = sqlEngine.executeSql(sql);
     return object;
 }
@@ -96,10 +102,10 @@ public Object getSuperSql(@RequestParam String question) {
 #### Ollama
 添加ollam的spring ai依赖
 ```xml
-<!--spring ai azure ollama-->
+<!--spring ai ollama-->
 <dependency>
-   <groupId>org.springframework.ai</groupId>
-   <artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-model-ollama</artifactId>
 </dependency>
 ```
 ollama的配置文件配置如下：
@@ -166,8 +172,12 @@ public Object getSuperSql(@RequestParam String question) {
 <!--spring ai chroma 的向量数据库-->
 <dependency>
     <groupId>org.springframework.ai</groupId>
-    <artifactId>spring-ai-chroma-store-spring-boot-starter</artifactId>
+    <artifactId>spring-ai-starter-vector-store-chroma</artifactId>
 </dependency>
+```
+启动本地chroma
+```shell
+docker run -it --rm --name chroma -p 8000:8000 ghcr.io/chroma-core/chroma:1.0.0
 ```
 
 #### 其他支持的向量数据库
@@ -257,5 +267,6 @@ Spring-Ai的官方文档：[https://docs.spring.io/spring-ai/docs/getting-starte
 
 ### 代码托管
 - Gitee：[https://gitee.com/guocjsh/super-sql](https://gitee.com/guocjsh/super-sql)
-
+- GitHub：[https://github.com/guocjsh/SuperSQL](https://github.com/guocjsh/SuperSQL)
+- GitCode：[https://gitcode.com/GuoChengJie/SuperSQL](https://gitcode.com/GuoChengJie/SuperSQL)
 

@@ -1,8 +1,14 @@
 package com.aispace.supersql.console.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.aispace.supersql.builder.RagOptions;
+import com.aispace.supersql.console.response.ResponseResult;
 import com.aispace.supersql.engine.SpringSqlEngine;
 import com.aispace.supersql.console.domain.bo.ChatBO;
+import com.aispace.supersql.model.RerankOptions;
+import com.aispace.supersql.model.RerankRequest;
+import com.aispace.supersql.model.RerankResponse;
+import com.aispace.supersql.rerank.RerankModel;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -16,10 +22,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
+import org.springframework.ai.document.Document;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -29,44 +37,40 @@ public class SuperChatController {
 
     private final AzureOpenAiChatModel chatModel;
 
-    //private final OpenAiChatModel chatModel;
-
     private final SpringSqlEngine sqlEngine;
 
-    @GetMapping("/chat2")
-    public String chat2(){
-        return "hello";
+    @PostMapping("/getSql")
+    public ResponseResult<String> getSql(@RequestBody ChatBO chatBO) {
+        String sql = sqlEngine
+                .setChatModel(chatModel)
+                .setOptions(RagOptions.builder().topN(10).rerank(true).limitScore(0.4).build())
+                .generateSql(chatBO.getQuestion());
+        return ResponseResult.success(sql);
     }
-
 
     @PostMapping("/chat")
     public ResponseBodyEmitter chat(@RequestBody ChatBO chatBO, HttpServletResponse servletResponse) {
         ResponseBodyEmitter emitter = new ResponseBodyEmitter();
         servletResponse.setContentType(MediaType.TEXT_EVENT_STREAM_VALUE);
-        String sql = sqlEngine.setChatModel(chatModel).generateSql(chatBO.getQuestion());
+        String sql = sqlEngine
+                .setChatModel(chatModel)
+                .setOptions(RagOptions.builder()
+                        .topN(5)
+                        .rerank(false)
+                        .limitScore(0.4)
+                        .build())
+                .generateSql(chatBO.getQuestion());
         Object object = sqlEngine.executeSql(sql);
-        JSONObject echarsJson = sqlEngine.generateEcharsJson(object.toString());
         Flux<ChatResponse> stream = sqlEngine.generateSummary(chatBO.getQuestion(), object.toString());
         stream.publishOn(Schedulers.boundedElastic())
                 .doOnError(emitter::completeWithError)
-                .doOnComplete(()->{
-                    try {
-                        if(echarsJson!=null){
-                            emitter.send("<echar>"+echarsJson+"</echar>");
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }finally {
-                        emitter.complete();
-                    }
-                        }
-                )
+                .doOnComplete(emitter::complete)
                 .subscribe(data -> {
                     String text = data.getResult().getOutput().getText();
                     try {
-                        if(StrUtil.isNotEmpty(text)){
+                        if (StrUtil.isNotEmpty(text)) {
                             emitter.send(text);
-                            //Thread.sleep(50);
+                            Thread.sleep(50);
                         }
                     } catch (Exception e) {
                         emitter.completeWithError(e);

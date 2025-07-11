@@ -36,8 +36,8 @@ public class DocumentController {
 
     @GetMapping("remove")
     public ResponseResult<Boolean> removeDocuments(@RequestParam String id) {
-        boolean delete = this.store.delete(List.of(id)).get();
-        return ResponseResult.success(delete);
+        this.store.delete(List.of(id));
+        return ResponseResult.success(true);
     }
 
 }

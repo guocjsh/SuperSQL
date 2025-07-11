@@ -46,6 +46,12 @@ spring:
           port: 8000
         collection-name: super-sql
         initialize-schema: true
+    #  重排序配置，可以上gitee Ai有免费体验 或者使用Xinference本地部署
+    reranker:
+      enabled: true
+      model: Qwen3-Reranker-8B
+      baseUrl: https://ai.gitee.com/v1/rerank #http://localhost:9997/v1/rerank
+      api-key: xxxxxxxxxx
 
 mvc:
   async:

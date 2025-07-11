@@ -29,9 +29,8 @@ public interface BaseVectorStore {
      * 使用Optional包装返回值是为了处理可能的空值情况，提供更安全的空值处理方式
      *
      * @param idList 要删除的记录的ID列表，不能为null
-     * @return 包含一个布尔值的Optional，表示删除操作是否成功如果列表为空或任何原因导致删除失败，返回的Optional将为空
      */
-    Optional<Boolean> delete(List<String> idList);
+    void delete(List<String> idList);
 
 
     /**

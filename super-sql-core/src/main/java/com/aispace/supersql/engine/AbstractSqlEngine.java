@@ -1,13 +1,20 @@
 package com.aispace.supersql.engine;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.stream.CollectorUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.aispace.supersql.builder.FollowupQuestionsBuilder;
+import com.aispace.supersql.builder.RagOptions;
 import com.aispace.supersql.builder.SqlpromptBuilder;
 import com.aispace.supersql.builder.TrainBuilder;
 import com.aispace.supersql.enumd.TrainPolicyType;
-import com.aispace.supersql.model.ChatClientFactory;
+import com.aispace.supersql.factory.ChatClientFactory;
+import com.aispace.supersql.model.DocumentWithScore;
+import com.aispace.supersql.model.RerankRequest;
+import com.aispace.supersql.model.RerankResponse;
+import com.aispace.supersql.rerank.RerankModel;
 import com.aispace.supersql.util.SqlExtractorUtils;
-import com.aispace.supersql.util.TextProcessor;
 import com.aispace.supersql.vector.BaseVectorStore;
 import com.aispace.supersql.prompt.SqlAssistantPrompt;
 import com.alibaba.fastjson.JSONObject;
@@ -51,6 +58,10 @@ public abstract class AbstractSqlEngine implements SqlEngine {
 
     protected ResourceLoader resourceLoader;
 
+    protected RerankModel rerankModel;
+
+    protected RagOptions options;
+
     @PostConstruct
     public void initialize() {
         try {
@@ -82,11 +93,29 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             List<Document> documents = this.vectorStore.searchByTag(
                     question,
                     expression.eq("script_type", type.name()).build(),
-                    10);
-            return documents.stream()
-                    .filter(doc -> doc.getScore() >= 0.4)
+                    options.getTopN());
+            List<Document> documentList = documents.stream()
+                    .filter(doc -> doc.getScore() >= options.getLimitScore())
                     .collect(Collectors.toList());
-//            return documents;
+            if(options.getRerank() && rerankModel == null){
+                log.warn("RerankModel is null, please check your configuration.");
+            }
+            if (!options.getRerank() || rerankModel == null || documentList.isEmpty()) {
+                return documentList;
+            }
+            // 使用RerankModel进行重新排序
+            RerankRequest request = new RerankRequest(question, documentList);
+            RerankResponse response = rerankModel.call(request);
+            return response
+                    .getResults()
+                    .stream()
+                    .map(data -> Document.builder()
+                            .score(data.getScore())
+                            .text(data.getOutput().getText())
+                            .build()
+                    )
+                    .filter(doc -> doc.getScore() >= options.getLimitScore())
+                    .toList();
         } catch (Exception e) {
             // 记录日志并返回空列表，具体处理方式根据业务需求调整
             System.err.println("Error searching documents by type " + type + ": " + e.getMessage());
@@ -102,7 +131,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
                 The following is a pandas DataFrame with the results of the query: \n
                 {context}\n
                 Please reply in MarkDown format\n
-                    """);
+                """);
         Prompt sysPrompt = sysTemplate.create(Map.of(
                 "question", getOrDefault(question, "No question provided"),
                 "context", getOrDefault(context, "No data available")
@@ -112,7 +141,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
                 Briefly summarize the data based on the question that was asked. Do not respond with any additional explanation beyond the summary.
                 """);
         Message userMessage = new SystemMessage(userTemplate.create().getContents());
-        List<Message> messages = new ArrayList<>(List.of(systemMessage,userMessage));
+        List<Message> messages = new ArrayList<>(List.of(systemMessage, userMessage));
         Prompt prompt = new Prompt(messages);
         ChatClient.StreamResponseSpec stream = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).stream();
         return stream.chatResponse();
@@ -123,10 +152,21 @@ public abstract class AbstractSqlEngine implements SqlEngine {
         if (question == null || question.trim().isEmpty()) {
             throw new IllegalArgumentException("Question cannot be null or empty");
         }
+        if (ObjectUtil.isNull(this.options)) {
+            this.options = RagOptions.builder()
+                    .topN(10).
+                    limitScore(0.5)
+                    .rerank(false)
+                    .build();
+        }
         FilterExpressionBuilder expression = new FilterExpressionBuilder();
         List<Document> questionSqlList = this.searchVectorByTag(question, TrainPolicyType.SQL);
         List<Document> ddlList = this.searchVectorByTag(question, TrainPolicyType.DDL);
         List<Document> documentList = this.searchVectorByTag(question, TrainPolicyType.DOCUMENTATION);
+        if(CollectionUtil.isEmpty(questionSqlList) && CollectionUtil.isEmpty(ddlList) && CollectionUtil.isEmpty(documentList)){
+            log.warn("No relevant documents found for question: {}", question);
+            return null;
+        }
         SqlpromptBuilder sqlprompt = SqlpromptBuilder.builder().question(question).questionSqlList(questionSqlList).ddlList(ddlList).documentList(documentList).build();
         Prompt prompt = SqlAssistantPrompt.getSqlPrompt(sqlprompt);
         log.info("Generating SQL Prompt for first:\n {}", prompt.getContents());
@@ -137,8 +177,8 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             List<Map<String, Object>> executed = executeSql(intermediateSql);
             sqlprompt.getDocumentList().add(
                     new Document(String.format("""
-                        The following is a pandas DataFrame with the results of the intermediate SQL query %s:\\n%s
-                        """,intermediateSql, executed.toString()
+                            The following is a pandas DataFrame with the results of the intermediate SQL query %s:\\n%s
+                            """, intermediateSql, executed.toString()
                     )));
             prompt = SqlAssistantPrompt.getSqlPrompt(sqlprompt);
             llmResponse = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
@@ -170,7 +210,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             ));
             Message systemMessage = new SystemMessage(sysPrompt.getContents());
 
-            PromptTemplate userTemplate=new PromptTemplate("""
+            PromptTemplate userTemplate = new PromptTemplate("""
                     Generate a list of '{questionsNum}' followup questions that the user might ask about this data. Respond with a list of questions, one per line. Do not answer with any explanations -- just the questions. Remember that there should be an unambiguous SQL query that can be generated from the question. Prefer questions that are answerable outside of the context of this conversation. Prefer questions that are slight modifications of the SQL query that was generated that allow digging deeper into the data. Each question will be turned into a button that the user can click to generate a new SQL query so don't use 'example' type questions. Each question must have a one-to-one correspondence with an instantiated SQL query.
                     Respond in the chinese language.
                     """);
@@ -178,12 +218,12 @@ public abstract class AbstractSqlEngine implements SqlEngine {
                     "questionsNum", questionsBuilder.getQuestionsNum()
             ));
             Message userMessage = new SystemMessage(userPrompt.getContents());
-            List<Message> messages = new ArrayList<>(List.of(systemMessage,userMessage));
+            List<Message> messages = new ArrayList<>(List.of(systemMessage, userMessage));
             Prompt prompt = new Prompt(messages);
             String llmResponse = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
 
             return analyzeLlmResponse(llmResponse);
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Failed to generate follow-up questions: {}", e.getMessage());
             return null;
         }
@@ -230,25 +270,24 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             return null;
         }
         String sysPrompt = """
-                    Your goal is to combine a sequence of questions into a singular question if they are related. If the second question does not relate to the first question and is fully self-contained, return the second question. Return just the new combined question with no additional explanations. The question should theoretically be answerable with a single SQL statement.
-                    """;
+                Your goal is to combine a sequence of questions into a singular question if they are related. If the second question does not relate to the first question and is fully self-contained, return the second question. Return just the new combined question with no additional explanations. The question should theoretically be answerable with a single SQL statement.
+                """;
         Message systemMessage = new SystemMessage(sysPrompt);
 
-        PromptTemplate userTemplate=new PromptTemplate("""
-                    First question:: '{lastQuestion}' \n
-                    Second question: '{newQuestion}' \n
-                    """);
+        PromptTemplate userTemplate = new PromptTemplate("""
+                First question:: '{lastQuestion}' \n
+                Second question: '{newQuestion}' \n
+                """);
         Prompt userPrompt = userTemplate.create(Map.of(
                 "lastQuestion", lastQuestion,
-                "newQuestion",newQuestion
+                "newQuestion", newQuestion
         ));
         Message userMessage = new SystemMessage(userPrompt.getContents());
-        List<Message> messages = new ArrayList<>(List.of(systemMessage,userMessage));
+        List<Message> messages = new ArrayList<>(List.of(systemMessage, userMessage));
         Prompt prompt = new Prompt(messages);
         String content = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
         return content;//TextProcessor.removeTags(content);
     }
-
 
 
     @Override
@@ -351,7 +390,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
             Prompt prompt = promptTemplate.create(Map.of("data", data, "format", format));
             String content = ChatClientFactory.buildChatClient(this.chatModel).prompt(prompt).call().content();
             return JSONObject.parseObject(extractJsonPattern(content));
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Failed to generate EchartsJson: {}", e.getMessage());
         }
         return null;
@@ -380,7 +419,7 @@ public abstract class AbstractSqlEngine implements SqlEngine {
 
     public static byte[] toByteArray(InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try(InputStream in = input){
+        try (InputStream in = input) {
             IOUtils.copy(in, output);
         }
         return output.toByteArray();

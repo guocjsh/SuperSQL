@@ -23,8 +23,8 @@ public class  SpringVectorStore implements BaseVectorStore{
     }
 
     @Override
-    public Optional<Boolean> delete(List<String> idList) {
-        return vectorStore.delete(idList);
+    public void delete(List<String> idList) {
+        vectorStore.delete(idList);
     }
 
     @Override

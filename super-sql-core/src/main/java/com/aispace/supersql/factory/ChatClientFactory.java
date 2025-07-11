@@ -1,4 +1,4 @@
-package com.aispace.supersql.model;
+package com.aispace.supersql.factory;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
