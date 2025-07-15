@@ -4,10 +4,15 @@
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">SuperSQL 1.0.0-M1</h1>
 <h4 align="center">中国人自己的生成式SQL Java框架！轻量，易用，易扩展!</h4>
 
+<p align="center">
+  <a href="./README.en.md"><img alt="README in English" src="https://img.shields.io/badge/English-d9d9d9"></a>
+  <a href="./README.md"><img alt="简体中文版自述文件" src="https://img.shields.io/badge/简体中文-d9d9d9"></a>
+</p>
+
 ---
 
 ### SuperSQL 介绍
-SuperSQL 是一个基于国内外先进生成式大模型实现Nl2SQL的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
+SuperSQL 是一个基于国内外先进生成式大模型实现Nl2sql的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
 
 主要特性包括：
 
@@ -109,7 +114,6 @@ spring:
       api-key: xxxxxxxxxx
 
 ```
-
 
 #### Ollama
 添加ollam的spring ai依赖
