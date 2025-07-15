@@ -7,7 +7,7 @@
 ---
 
 ### SuperSQL 介绍
-SuperSQL 是一个基于国内外先进生成式大模型实现Nl2sql的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
+SuperSQL 是一个基于国内外先进生成式大模型实现Nl2SQL的Java框架，专注于将数据库表结构通过检索增强生成（RAG, Retrieval-Augmented Generation）技术进行训练，从而实现从自然语言文本到SQL查询的智能转换（Text to SQL）。该框架旨在简化复杂的数据库查询过程，使开发者和用户能够通过简单的自然语言描述获取所需数据。
 
 主要特性包括：
 
@@ -96,6 +96,18 @@ public Object getSuperSql(@RequestParam String question) {
     Object object = sqlEngine.executeSql(sql);
     return object;
 }
+```
+#### 开启ReRanker重排序配置
+```
+spring:
+  ai:
+    #  重排序配置，可以上gitee Ai有免费体验 或者使用Xinference本地部署
+    reranker:
+      enabled: true
+      model: Qwen3-Reranker-8B
+      baseUrl: https://ai.gitee.com/v1/rerank #http://localhost:9997/v1/rerank
+      api-key: xxxxxxxxxx
+
 ```
 
 
