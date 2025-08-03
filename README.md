@@ -5,8 +5,12 @@
 <h4 align="center">中国人自己的生成式SQL Java框架！轻量，易用，易扩展!</h4>
 
 <p align="center">
-  <a href="./README.en.md"><img alt="README in English" src="https://img.shields.io/badge/English-d9d9d9"></a>
-  <a href="./README.md"><img alt="简体中文版自述文件" src="https://img.shields.io/badge/简体中文-d9d9d9"></a>
+  <a href="./README.en.md"><img src="https://img.shields.io/badge/English_README-blue" alt="English README"></a>
+  <a href="./README.md"><img src="https://img.shields.io/badge/简体中文_README-blue" alt="English README"></a>
+  <a href="https://www.apache.org/licenses/LICENSE-2.0.txt"><img src="https://img.shields.io/github/license/guocjsh/SuperSQL?color=%231890FF" alt="License: Apache-2.0"></a>
+  <a href="https://github.com/guocjsh/SuperSQL"><img src="https://img.shields.io/github/stars/guocjsh/SuperSQL?style=flat-square" alt="Stars"></a>
+  <a href="https://gitee.com/guocjsh/SuperSQL"><img src="https://gitee.com/guocjsh/supersql-open/badge/star.svg?theme=gvp" alt="Gitee Stars"></a>
+  <a href="https://gitcode.com/GuoChengJie/SuperSQL"><img src="https://gitcode.com/GuoChengJie/SuperSQL/star/badge.svg" alt="GitCode Stars"></a>
 </p>
 
 ---
@@ -266,6 +270,12 @@ npm run dev
 
 ![请求示例](https://tiger-bucket.oss-cn-shanghai.aliyuncs.com/super-sql/WechatIMG1675.jpg)
 
+### 功能规划
+
+- 增加企业微信集成 、钉钉集成 、飞书集成
+- MCP支持 （已完成）
+- 生产式图表支持
+- Solon版本支持
 
 
 ### SuperSQL官方文档

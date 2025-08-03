@@ -1,33 +1,30 @@
 package com.aispace.supersql.spring.configure;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+import java.util.List;
 
 @Getter
 @Setter
-@EnableConfigurationProperties(value = {SuperSQLProperties.class})
 @ConfigurationProperties(prefix = "super-sql")
 public class SuperSQLProperties {
 
-    private Boolean initTrain;
+    private Boolean initTrain = false;
 
-    private Double temperature;
+    private ScopeType scope = ScopeType.ALONE;
 
-    public Boolean getInitTrain() {
-        return initTrain;
+    private List<Schema> schemas;
+
+    private Double temperature = 0.0;
+
+    public enum ScopeType {
+        ALONE,
+        ALL;
     }
 
-    public void setInitTrain(Boolean initTrain) {
-        this.initTrain = initTrain;
-    }
+    public record Schema( @JsonProperty("schema") String schema) {}
 
-    public Double getTemperature() {
-        return temperature;
-    }
-
-    public void setTemperature(Double temperature) {
-        this.temperature = temperature;
-    }
 }

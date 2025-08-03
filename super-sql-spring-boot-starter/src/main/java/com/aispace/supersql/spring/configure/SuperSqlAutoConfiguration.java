@@ -30,6 +30,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author chengjie.guo
@@ -63,6 +64,7 @@ public class SuperSqlAutoConfiguration {
         return new SpringReRankProperties();
     }
 
+
     @Bean
     @ConditionalOnMissingBean
     public SpringSqlEngine sqlEngine(
@@ -73,35 +75,44 @@ public class SuperSqlAutoConfiguration {
             ResourceLoader resourceLoader,
             @Autowired(required = false) RerankModel rerankModel
     ) {
-        SpringSqlEngine engine = new SpringSqlEngine(executeService, null, springVectorStore, springRagEngine, resourceLoader,rerankModel);
-        if (superSQLProperties != null && superSQLProperties.getInitTrain()) {
-            log.info("Initialization training for SuperSQL has been enabled.");
-            String sql = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS";
-            try {
-                List<Map<String, Object>> object = engine.executeSql(sql);
-                if (object != null && !object.isEmpty()) {
-                    TrainingPlanGenerator.TrainingPlan plan = TrainingPlanGenerator.getTrainingPlanGeneric(object);
-                    SpringRagEngine raggedEngine = ragEngine(springVectorStore);
-                    plan.getPlan().forEach(item -> {
-                        raggedEngine.addDocumentation(item.getItemValue());
-                    });
-                    log.info("Training plan generated successfully.");
-                } else {
-                    // 处理空结果集的情况
-                    log.warn("No columns found in the database.");
-                    return null;
-                }
-            } catch (Exception e) {
-                // 记录异常日志
-                // 抛出自定义异常或返回默认值
-                throw new RuntimeException("Failed to execute SQL query", e);
-            }
-        } else {
+        SpringSqlEngine engine = new SpringSqlEngine(executeService, null, springVectorStore, springRagEngine, resourceLoader, rerankModel);
+
+        if (superSQLProperties == null || !superSQLProperties.getInitTrain()) {
             log.info("Initialization training for SuperSQL has been disabled.");
+            return engine;
+        }
+
+        log.info("Initialization training for SuperSQL has been enabled.");
+        String sql = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS";
+        if (superSQLProperties.getScope() == SuperSQLProperties.ScopeType.ALONE) {
+            List<SuperSQLProperties.Schema> schemas = superSQLProperties.getSchemas();
+            if (schemas != null && !schemas.isEmpty()) {
+                String scheamList = schemas.stream()
+                        .map(i -> "'" + i.schema() + "'")
+                        .collect(Collectors.joining(",", "(", ")"));
+                sql = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema in " +scheamList ;
+            }
+        }
+        try {
+            List<Map<String, Object>> result = engine.executeSql(sql);
+            if (result == null || result.isEmpty()) {
+                log.warn("No columns found in the database during initialization training.");
+                throw new RuntimeException("No columns found in the database.");
+            }
+
+            TrainingPlanGenerator.TrainingPlan plan = TrainingPlanGenerator.getTrainingPlanGeneric(result);
+            SpringRagEngine raggedEngine = ragEngine(springVectorStore);
+            plan.getPlan().forEach(item -> raggedEngine.addDocumentation(item.getItemValue()));
+            log.info("Training plan generated successfully with {} items.", plan.getPlan().size());
+
+        } catch (Exception e) {
+            log.error("Failed to execute SQL query for initialization training: {}", sql, e);
+            throw new RuntimeException("Failed to execute SQL query for initialization training.", e);
         }
 
         return engine;
     }
+
 
 
     @Configuration
@@ -119,7 +130,7 @@ public class SuperSqlAutoConfiguration {
                 RestClient.Builder restClientBuilder,
                 ResponseErrorHandler responseErrorHandler
         ) {
-            RequestFactory requestFactory = new RequestFactory(reRankProperties.getBaseUrl(), reRankProperties.getApiKey(),restClientBuilder,responseErrorHandler);
+            RequestFactory requestFactory = new RequestFactory(reRankProperties.getBaseUrl(), reRankProperties.getApiKey(), restClientBuilder, responseErrorHandler);
             RerankOptions options = new RerankOptions() {
                 @Override
                 public String getModel() {
@@ -131,7 +142,7 @@ public class SuperSqlAutoConfiguration {
                     return 10;
                 }
             };
-            return new DefaultRerankModel(retryTemplate, requestFactory,options);
+            return new DefaultRerankModel(retryTemplate, requestFactory, options);
         }
 
     }

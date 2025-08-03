@@ -5,14 +5,8 @@ import com.aispace.supersql.builder.RagOptions;
 import com.aispace.supersql.console.response.ResponseResult;
 import com.aispace.supersql.engine.SpringSqlEngine;
 import com.aispace.supersql.console.domain.bo.ChatBO;
-import com.aispace.supersql.model.RerankOptions;
-import com.aispace.supersql.model.RerankRequest;
-import com.aispace.supersql.model.RerankResponse;
-import com.aispace.supersql.rerank.RerankModel;
-import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -22,12 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-import org.springframework.ai.document.Document;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
 
 @Slf4j
 @RestController

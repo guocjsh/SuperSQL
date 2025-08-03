@@ -1,10 +1,13 @@
 ##服务端口
 server:
-  port: 9800
+  port: 8088
 spring:
   application:
     ###应用名
-    name: super-sql-demo
+    name: super-sql-mcp-server
+  main:
+    banner-mode: off
+    web-application-type: none
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/super-sql?characterEncoding=utf8&useSSL=false
@@ -53,12 +56,19 @@ spring:
       baseUrl: https://ai.gitee.com/v1/rerank #http://localhost:9997/v1/rerank
       api-key: xxxxxxxxxx
 
-mvc:
-  async:
-    request-timeout: 2000
+    mcp:
+      server:
+        name: super-sql-mcp-server
+        version: 1.0.0
+        type: SYNC
 
 super-sql:
   init-train: true
   scope: ALONE  # ALL 整库训练, ALONE 单库训练
   schemas:
     - schema: you_schema  # 指定数据库
+
+
+mybatis-plus:
+  global-config:
+    banner: off

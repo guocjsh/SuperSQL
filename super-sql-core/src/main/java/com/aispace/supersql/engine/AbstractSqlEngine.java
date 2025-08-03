@@ -1,7 +1,6 @@
 package com.aispace.supersql.engine;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.stream.CollectorUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.aispace.supersql.builder.FollowupQuestionsBuilder;
@@ -10,7 +9,6 @@ import com.aispace.supersql.builder.SqlpromptBuilder;
 import com.aispace.supersql.builder.TrainBuilder;
 import com.aispace.supersql.enumd.TrainPolicyType;
 import com.aispace.supersql.factory.ChatClientFactory;
-import com.aispace.supersql.model.DocumentWithScore;
 import com.aispace.supersql.model.RerankRequest;
 import com.aispace.supersql.model.RerankResponse;
 import com.aispace.supersql.rerank.RerankModel;

@@ -1,0 +1,30 @@
+##服务端口
+server:
+  port: 8082
+spring:
+  application:
+    ###应用名
+    name: super-sql-mpc-client
+  ai:
+    mcp:
+      client:
+        ### stdio 模式
+#        stdio:
+#          servers-configuration: classpath:/mcp-servers.json
+        ### see模式
+        sse:
+          connections:
+            webmvc-super-sql-mcp-server:
+              url: http://localhost:8089
+        toolcallback:
+          enabled: true
+    azure:
+      openai:
+        api-key: your_openai_api_key
+        chat:
+          options:
+            deployment-name: your_chat_model_deployment_name
+        endpoint: your_openai_endpoint
+        embedding:
+          options:
+            deployment-name: your_embedding_model_deployment_name

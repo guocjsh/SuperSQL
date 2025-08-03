@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "super-sql-mcp-server": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "-Dspring.ai.mcp.server.stdio=true",
+        "-Dspring.main.web-application-type=none",
+        "-Dlogging.pattern.console=",
+        "-Dspring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
+        "-Dspring.datasource.url=jdbc:mysql://localhost:3306/supersql?characterEncoding=utf8&useSSL=false",
+        "-Dspring.datasource.username=root",
+        "-Dspring.datasource.password=123456",
+        "-Dspring.ai.azure.openai.api-key=your_openai_api_key",
+        "-Dspring.ai.azure.openai.chat.options.deployment-name=your_chat_model_deployment_name",
+        "-Dspring.ai.azure.openai.endpoint=your_openai_endpoint",
+        "-Dspring.ai.azure.openai.embedding.options.deployment-name=your_embedding_model_deployment_name",
+        "-Dspring.ai.vectorstore.chroma.client.host=http://127.0.0.1",
+        "-Dspring.ai.vectorstore.chroma.client.port=8000",
+        "-Dspring.ai.vectorstore.chroma.collection-name=super-sql",
+        "-Dspring.ai.vectorstore.chroma.initialize-schema=true",
+        "D:\\your_jar_file_path\\super-sql-mcp-stdio-1.0.0-M1.jar"
+      ],
+      "env": {}
+    }
+  }
+}

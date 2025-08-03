@@ -10,3 +10,4 @@ mybatis-plus:
 
 super-sql:
   init-train: false
+  scope: ALL
